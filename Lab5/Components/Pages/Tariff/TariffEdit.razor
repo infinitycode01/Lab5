@@ -1,0 +1,61 @@
+@page "/tariffs/edit/{tariffId:int}"
+@using Lab5.Models
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Tariff</PageTitle>
+
+<h3>Edit Tariff</h3>
+
+<EditForm Model="@tariff" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="CityId">City</label>
+        <InputSelect id="CityId" class="form-control" @bind-Value="tariff.CityId">
+            <option value="">-- Select City --</option>
+            @foreach (var city in cities)
+            {
+                <option value="@city.CityId">@city.CityName</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="form-group">
+        <label for="RatePerMinute">Rate per Minute</label>
+        <InputNumber id="RatePerMinute" class="form-control" @bind-Value="tariff.RatePerMinute" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    private Tariff tariff = new Tariff();
+    private List<City> cities = new List<City>();
+
+    [Parameter] public int tariffId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        tariff = await DbContext.Tariffs.FindAsync(tariffId);
+        if (tariff == null)
+        {
+            NavigationManager.NavigateTo("/tariffs");
+        }
+        cities = await DbContext.Cities.ToListAsync();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        DbContext.Tariffs.Update(tariff);
+        await DbContext.SaveChangesAsync();
+        NavigationManager.NavigateTo("/tariffs");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/tariffs");
+    }
+}

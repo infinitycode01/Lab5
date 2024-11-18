@@ -1,0 +1,53 @@
+@page "/cities/edit/{cityId:int}"
+@using Lab5.Models
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit City</PageTitle>
+
+<h3>Edit City</h3>
+
+<EditForm Model="@city" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="CityName">City Name</label>
+        <InputText id="CityName" class="form-control" @bind-Value="city.CityName" />
+    </div>
+
+    <div class="form-group">
+        <label for="AreaCode">Area Code</label>
+        <InputText id="AreaCode" class="form-control" @bind-Value="city.AreaCode" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    private City city = new City();
+
+    [Parameter] public int cityId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        city = await DbContext.Cities.FindAsync(cityId);
+        if (city == null)
+        {
+            NavigationManager.NavigateTo("/cities");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        DbContext.Cities.Update(city);
+        await DbContext.SaveChangesAsync();
+        NavigationManager.NavigateTo("/cities");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/cities");
+    }
+}

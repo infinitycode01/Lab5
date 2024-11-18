@@ -1,0 +1,57 @@
+@page "/calls/create"
+@using Lab5.Models
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<PageTitle>Add Call</PageTitle>
+
+<h3>Add New Call</h3>
+
+<EditForm Model="@newCall" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="PhoneId">Phone ID</label>
+        <InputNumber id="PhoneId" class="form-control" @bind-Value="newCall.PhoneId" />
+    </div>
+
+    <div class="form-group">
+        <label for="CityId">City ID</label>
+        <InputNumber id="CityId" class="form-control" @bind-Value="newCall.CityId" />
+    </div>
+
+    <div class="form-group">
+        <label for="CallDate">Call Date</label>
+        <InputDate id="CallDate" class="form-control" @bind-Value="newCall.CallDate" />
+    </div>
+
+    <div class="form-group">
+        <label for="CallDuration">Call Duration (in minutes)</label>
+        <InputNumber id="CallDuration" class="form-control" @bind-Value="newCall.CallDuration" />
+    </div>
+
+    <div class="form-group">
+        <label for="TariffId">Tariff ID</label>
+        <InputNumber id="TariffId" class="form-control" @bind-Value="newCall.TariffId" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    private Call newCall = new Call();
+
+    private async Task HandleValidSubmit()
+    {
+        DbContext.Calls.Add(newCall);
+        await DbContext.SaveChangesAsync();
+        NavigationManager.NavigateTo("/calls");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/calls");
+    }
+}

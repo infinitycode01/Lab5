@@ -1,0 +1,111 @@
+@page "/subscribers"
+@using Lab5.Models
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<PageTitle>Subscribers</PageTitle>
+
+<h3>Subscribers</h3>
+
+<button class="btn btn-primary mb-3" @onclick="CreateSubscriber">Add New Subscriber</button>
+
+<table class="table table-striped mt-4">
+    <thead>
+        <tr>
+            <th>Subscriber ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Address</th>
+            <th>Phone Numbers</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var subscriber in subscribers)
+        {
+            <tr>
+                <td>@subscriber.SubscriberId</td>
+                <td>@subscriber.FirstName</td>
+                <td>@subscriber.LastName</td>
+                <td>@subscriber.Address</td>
+                <td>
+                    @foreach (var phone in subscriber.Phones)
+                    {
+                        <p>@phone.PhoneNumber</p>
+                    }
+                </td>
+                <td>
+                    <button class="btn btn-primary" @onclick="() => EditSubscriber(subscriber.SubscriberId)">Edit</button>
+                    <button class="btn btn-danger" @onclick="() => ConfirmDeleteSubscriber(subscriber.SubscriberId)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (showConfirmDelete)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Deletion</h5>
+                    <button type="button" class="close" @onclick="CancelDelete" style="border: none; background: none; font-size: 1.5rem; color: #dc3545;">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this subscriber?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="DeleteSubscriberConfirmed">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Subscriber> subscribers = new List<Subscriber>();
+    private int subscriberIdToDelete;
+    private bool showConfirmDelete = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        subscribers = await DbContext.Subscribers.Include(s => s.Phones).ToListAsync();
+    }
+
+    private void CreateSubscriber()
+    {
+        NavigationManager.NavigateTo("/subscribers/create");
+    }
+
+    private void EditSubscriber(int id)
+    {
+        NavigationManager.NavigateTo($"/subscribers/edit/{id}");
+    }
+
+    private void ConfirmDeleteSubscriber(int id)
+    {
+        subscriberIdToDelete = id;
+        showConfirmDelete = true;
+    }
+
+    private void CancelDelete()
+    {
+        showConfirmDelete = false;
+    }
+
+    private async Task DeleteSubscriberConfirmed()
+    {
+        var subscriber = await DbContext.Subscribers.FindAsync(subscriberIdToDelete);
+        if (subscriber != null)
+        {
+            DbContext.Subscribers.Remove(subscriber);
+            await DbContext.SaveChangesAsync();
+            subscribers = await DbContext.Subscribers.Include(s => s.Phones).ToListAsync();
+        }
+        showConfirmDelete = false;
+    }
+}

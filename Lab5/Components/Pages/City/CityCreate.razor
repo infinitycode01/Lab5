@@ -1,0 +1,42 @@
+@page "/cities/create"
+@using Lab5.Models
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<PageTitle>Add City</PageTitle>
+
+<h3>Add New City</h3>
+
+<EditForm Model="@newCity" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="CityName">City Name</label>
+        <InputText id="CityName" class="form-control" @bind-Value="newCity.CityName" />
+    </div>
+
+    <div class="form-group">
+        <label for="AreaCode">Area Code</label>
+        <InputText id="AreaCode" class="form-control" @bind-Value="newCity.AreaCode" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    private City newCity = new City();
+
+    private async Task HandleValidSubmit()
+    {
+        DbContext.Cities.Add(newCity);
+        await DbContext.SaveChangesAsync();
+        NavigationManager.NavigateTo("/cities");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/cities");
+    }
+}

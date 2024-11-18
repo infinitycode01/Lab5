@@ -1,0 +1,108 @@
+@page "/calls"
+@using Lab5.Models
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<PageTitle>Calls</PageTitle>
+
+<h3>Calls</h3>
+
+<button class="btn btn-primary mb-3" @onclick="CreateCall">Add New Call</button>
+
+<table class="table table-striped mt-4">
+    <thead>
+        <tr>
+            <th>Call ID</th>
+            <th>Phone ID</th>
+            <th>City ID</th>
+            <th>Call Date</th>
+            <th>Call Duration (min)</th>
+            <th>Tariff ID</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var call in calls)
+        {
+            <tr>
+                <td>@call.CallId</td>
+                <td>@call.PhoneId</td>
+                <td>@call.CityId</td>
+                <td>@call.CallDate</td>
+                <td>@call.CallDuration</td>
+                <td>@call.TariffId</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="() => EditCall(call.CallId)">Edit</button>
+                    <button class="btn btn-danger" @onclick="() => ConfirmDeleteCall(call.CallId)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (showConfirmDelete)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Deletion</h5>
+                    <button type="button" class="close" @onclick="CancelDelete" style="border: none; background: none; font-size: 1.5rem; color: #dc3545;">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this call?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="DeleteCallConfirmed">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Call> calls = new List<Call>();
+    private int callIdToDelete;
+    private bool showConfirmDelete = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        calls = await DbContext.Calls.ToListAsync();
+    }
+
+    private void CreateCall()
+    {
+        NavigationManager.NavigateTo("/calls/create");
+    }
+
+    private void EditCall(int id)
+    {
+        NavigationManager.NavigateTo($"/calls/edit/{id}");
+    }
+
+    private void ConfirmDeleteCall(int id)
+    {
+        callIdToDelete = id;
+        showConfirmDelete = true;
+    }
+
+    private void CancelDelete()
+    {
+        showConfirmDelete = false;
+    }
+
+    private async Task DeleteCallConfirmed()
+    {
+        var call = await DbContext.Calls.FindAsync(callIdToDelete);
+        if (call != null)
+        {
+            DbContext.Calls.Remove(call);
+            await DbContext.SaveChangesAsync();
+            calls = await DbContext.Calls.ToListAsync();
+        }
+        showConfirmDelete = false;
+    }
+}
